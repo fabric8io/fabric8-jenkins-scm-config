@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.9.1">
+      <projectUrl>https://github.com/fabric8io/fabric8/</projectUrl>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.2.5">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <refspec>+refs/pull/*:refs/remotes/origin/pr/*</refspec>
+        <url>git@github.com:fabric8io/fabric8.git</url>
+        <credentialsId>902cbfed-bb82-4422-b131-3ab2bc77fd4e</credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>${sha1}</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>true</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <jdk>JDK7</jdk>
+  <triggers>
+    <org.jenkinsci.plugins.ghprb.GhprbTrigger plugin="ghprb@1.15-1">
+      <spec>H/5 * * * *</spec>
+      <adminlist>tdiesler jstrachan iocanel davsclaus</adminlist>
+      <allowMembersOfWhitelistedOrgsAsAdmin>true</allowMembersOfWhitelistedOrgsAsAdmin>
+      <orgslist>fabric8io</orgslist>
+      <cron>H/5 * * * *</cron>
+      <triggerPhrase></triggerPhrase>
+      <onlyTriggerPhrase>false</onlyTriggerPhrase>
+      <useGitHubHooks>true</useGitHubHooks>
+      <permitAll>false</permitAll>
+      <commentFilePath></commentFilePath>
+      <whitelist></whitelist>
+      <autoCloseFailedPullRequests>false</autoCloseFailedPullRequests>
+      <whiteListTargetBranches>
+        <org.jenkinsci.plugins.ghprb.GhprbBranch>
+          <branch></branch>
+        </org.jenkinsci.plugins.ghprb.GhprbBranch>
+      </whiteListTargetBranches>
+      <project>fabric8-pullreq</project>
+    </org.jenkinsci.plugins.ghprb.GhprbTrigger>
+  </triggers>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>echo Log result of the original merge
+git log --max-count=16 --oneline
+echo 
+
+echo Checkout target branch and pull from origin
+git checkout -f $ghprbTargetBranch
+git reset --hard origin/$ghprbTargetBranch
+echo Log target branch at origin
+git log --max-count=16 --oneline
+echo 
+
+echo Rebase actual commit on target branch
+BRANCH_PREFIX=buildBranch
+BRANCH_NAME=$BRANCH_PREFIX#$BUILD_NUMBER
+git checkout -b $BRANCH_NAME $ghprbActualCommit
+rm -rf .git/rebase-apply
+git rebase $ghprbTargetBranch
+echo Log source branch after rebase
+git log --max-count=16 --oneline
+echo 
+
+echo Fast forward the target branch
+git checkout $ghprbTargetBranch
+git merge --ff-only $BRANCH_NAME
+git branch | grep $BRANCH_PREFIX | xargs git branch -D
+echo Log target branch after rebase
+git log --max-count=16 --oneline
+echo 
+</command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Maven>
+      <targets>-V -B -U clean install -Pall -Dts.basic</targets>
+      <mavenName>maven-3.1.1</mavenName>
+      <jvmOptions>-Xmx1G -XX:MaxPermSize=512m</jvmOptions>
+      <usePrivateRepository>false</usePrivateRepository>
+      <settings class="jenkins.mvn.DefaultSettingsProvider"/>
+      <globalSettings class="jenkins.mvn.DefaultGlobalSettingsProvider"/>
+    </hudson.tasks.Maven>
+  </builders>
+  <publishers>
+    <hudson.tasks.ArtifactArchiver>
+      <artifacts>**/data/log/karaf.log*</artifacts>
+      <allowEmptyArchive>false</allowEmptyArchive>
+      <onlyIfSuccessful>false</onlyIfSuccessful>
+      <fingerprint>false</fingerprint>
+      <defaultExcludes>true</defaultExcludes>
+    </hudson.tasks.ArtifactArchiver>
+    <hudson.tasks.junit.JUnitResultArchiver plugin="junit@1.1">
+      <testResults>**/target/surefire-reports/*.xml</testResults>
+      <keepLongStdio>false</keepLongStdio>
+      <testDataPublishers/>
+      <healthScaleFactor>1.0</healthScaleFactor>
+    </hudson.tasks.junit.JUnitResultArchiver>
+    <hudson.plugins.git.GitPublisher plugin="git@2.2.5">
+      <configVersion>2</configVersion>
+      <pushMerge>false</pushMerge>
+      <pushOnlyIfSuccess>true</pushOnlyIfSuccess>
+      <branchesToPush>
+        <hudson.plugins.git.GitPublisher_-BranchToPush>
+          <targetRepoName>origin</targetRepoName>
+          <branchName>$ghprbTargetBranch</branchName>
+        </hudson.plugins.git.GitPublisher_-BranchToPush>
+      </branchesToPush>
+    </hudson.plugins.git.GitPublisher>
+  </publishers>
+  <buildWrappers/>
+</project>
