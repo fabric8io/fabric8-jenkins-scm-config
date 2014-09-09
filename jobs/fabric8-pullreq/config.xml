@@ -56,6 +56,14 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
+      <command># Clean previous build artefacts
+M2_REPO=&quot;$HOME/.m2/repository&quot;
+rm -rf $M2_REPO/io/fabric8
+
+# Kill stale fabric instances
+fabric/kill-fabric.sh </command>
+    </hudson.tasks.Shell>
+    <hudson.tasks.Shell>
       <command>echo Log result of the original merge
 git log --max-count=16 --oneline
 echo 
