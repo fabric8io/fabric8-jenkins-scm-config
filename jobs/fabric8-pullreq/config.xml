@@ -62,7 +62,8 @@ echo
 
 echo Checkout target branch and pull from origin
 git checkout -f $ghprbTargetBranch
-git reset --hard origin/$ghprbTargetBranch
+git fetch origin $ghprbTargetBranch
+git reset --hard FETCH_HEAD
 echo Log target branch at origin
 git log --max-count=16 --oneline
 echo 
