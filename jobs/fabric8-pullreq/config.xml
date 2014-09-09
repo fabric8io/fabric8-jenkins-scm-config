@@ -84,6 +84,7 @@ git merge --ff-only $BRANCH_NAME
 git branch | grep $BRANCH_PREFIX | xargs git branch -D
 echo Log target branch after rebase
 git log --max-count=16 --oneline
+git status
 echo 
 </command>
     </hudson.tasks.Shell>
