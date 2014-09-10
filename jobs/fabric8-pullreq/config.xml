@@ -27,7 +27,7 @@
     <extensions/>
   </scm>
   <canRoam>true</canRoam>
-  <disabled>false</disabled>
+  <disabled>true</disabled>
   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
   <jdk>JDK7</jdk>
@@ -123,12 +123,14 @@ echo
       <configVersion>2</configVersion>
       <pushMerge>false</pushMerge>
       <pushOnlyIfSuccess>true</pushOnlyIfSuccess>
+      <tagsToPush/>
       <branchesToPush>
         <hudson.plugins.git.GitPublisher_-BranchToPush>
           <targetRepoName>origin</targetRepoName>
           <branchName>$ghprbTargetBranch</branchName>
         </hudson.plugins.git.GitPublisher_-BranchToPush>
       </branchesToPush>
+      <notesToPush/>
     </hudson.plugins.git.GitPublisher>
   </publishers>
   <buildWrappers/>
